@@ -16,7 +16,7 @@ export default function ChannelPage() {
     e.preventDefault();
 
     try {
-      const response = await fetch('https://9c4d05bb17ce.ngrok.app', {
+      const response = await fetch('https://9c4d05bb17ce.ngrok.app/download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, format }),
