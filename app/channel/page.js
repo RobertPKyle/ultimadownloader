@@ -16,7 +16,7 @@ export default function ChannelPage() {
     e.preventDefault();
 
     try {
-      const response = await fetch('https://operated-groups-romania-tone.trycloudflare.com', {
+      const response = await fetch('https://9c4d05bb17ce.ngrok.app', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, format }),
