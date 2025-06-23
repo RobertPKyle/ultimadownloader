@@ -11,7 +11,7 @@ export default function HomePage() {
     e.preventDefault();
 
     try {
-      const response = await fetch('/api/download', {
+      const response = await fetch('https://cop-vii-ng-scotland.trycloudflare.com', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, format }),

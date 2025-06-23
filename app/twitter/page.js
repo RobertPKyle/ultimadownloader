@@ -16,7 +16,7 @@ export default function TwitterPage() {
     e.preventDefault();
 
     try {
-      const response = await fetch('/api/twitter-download', {
+      const response = await fetch('https://cop-vii-ng-scotland.trycloudflare.com', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, format }),
