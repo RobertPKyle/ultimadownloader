@@ -1,11 +1,11 @@
 export default function BuyMeACoffee() {
   return (
     <a
-      href="https://buymeacoffee.com/ultimadownd"
+      href="https://ko-fi.com/ultimadownloader"
       target="_blank"
       rel="noopener noreferrer"
       style={{
-        backgroundColor: '#ffdd00',
+        backgroundColor: '#1b92c1',
         color: '#333',
         fontWeight: 'bold',
         padding: '0.6rem 1.2rem',
@@ -16,7 +16,7 @@ export default function BuyMeACoffee() {
         boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
       }}
     >
-      ☕ Buy me a coffee
+      Support the Site
     </a>
   );
 }
