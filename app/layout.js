@@ -11,7 +11,13 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <div style={{ padding: '2rem' }}>
-          <h1 style={{ textAlign: 'center', marginBottom: '1rem' }}>Ultima Downloader</h1>
+           <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+            <img 
+              src="/ultimadownloaderlogo.png" 
+              alt="Ultima Downloader Logo" 
+              style={{ maxWidth: '300px', height: 'auto' }} 
+            />
+          </div>
           <NavBar />
           {children}
         </div>
