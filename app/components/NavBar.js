@@ -6,9 +6,13 @@ import { usePathname } from 'next/navigation';
 const tabs = [
   { label: 'Download single Youtube Video', path: '/' },
   { label: 'Download Youtube playlist', path: '/playlist' },
-  { label: 'Rip entire Youtube channel', path: '/channel' },
+  { label: 'Download entire Youtube channel', path: '/channel' },
   { label: 'Download Tweet/X', path: '/twitter' },
   { label: 'Download Instagram video', path: '/instagram' },
+  { label: 'Download TikTok video', path: '/tiktok' },
+  { label: 'Download Reddit video', path: '/reddit' },
+  { label: 'Download Facebook video', path: '/facebook' },
+  { label: 'Download Twitch video', path: '/twitch' },
 ];
 
 export default function NavBar() {
