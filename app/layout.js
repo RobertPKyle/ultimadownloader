@@ -1,5 +1,6 @@
 import './globals.css';
 import NavBar from './components/NavBar';
+import { Analytics } from "@vercel/analytics/next"
 
 export const metadata = {
   title: 'Ultima Downloader',
