@@ -5,9 +5,7 @@ import { usePathname } from 'next/navigation';
 
 const tabs = [
   { label: 'Download single Youtube Video', path: '/' },
-  { label: 'Download Youtube playlist', path: '/playlist' },
-  { label: 'Download entire Youtube channel', path: '/channel' },
-  { label: 'Download Tweet/X', path: '/twitter' },
+  { label: 'Download Tweet/X Video', path: '/twitter' },
   { label: 'Download Instagram video', path: '/instagram' },
   { label: 'Download TikTok video', path: '/tiktok' },
   { label: 'Download Reddit video', path: '/reddit' },
