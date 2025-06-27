@@ -107,6 +107,10 @@ export default function HomePage() {
             or distribute any copyrighted material.
           </p>
           <br></br>
+              <p style={{ fontSize: '1rem', lineHeight: '1.5' }}>
+            Changelog 06/27/2025: Had to remove options for downloading entire youtube pages and playlists as it was choking my backend system (suffering from success I guess).
+          </p>
+          <br></br>
       </form>
    </main>
   );
