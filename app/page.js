@@ -101,6 +101,8 @@ export default function HomePage() {
         <div style={{ marginTop: '2rem' }}>
       <BuyMeACoffee />
     </div>
+            <h1>PLEASE DONATE. THE BACKEND OF THIS SITE NEEDS TO BE UPGRADED AND I DON'T RUN ADS. PLEASE CONSIDER DONATING!</h1>
+            <br></br>
      <p style={{ fontSize: '1rem', lineHeight: '1.5' }}>
             This tool is for personal, educational, and fair-use only. You are responsible for
             complying with the terms of the platforms from which you download content. We do not host
