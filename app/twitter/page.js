@@ -16,7 +16,7 @@ export default function TwitterPage() {
     e.preventDefault();
 
     try {
-      const response = await fetch('https://0f260da8b1ff.ngrok.app/download', {
+      const response = await fetch('https://e3f0bf8afbc0.ngrok.app/download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, format }),

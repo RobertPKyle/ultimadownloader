@@ -11,7 +11,7 @@ export default function HomePage() {
     e.preventDefault();
 
     try {
-      const response = await fetch('https://0f260da8b1ff.ngrok.app/download', {
+      const response = await fetch('https://e3f0bf8afbc0.ngrok.app/download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, format }),
@@ -101,17 +101,10 @@ export default function HomePage() {
         <div style={{ marginTop: '2rem' }}>
       <BuyMeACoffee />
     </div>
-            <h1>ATTENTION: AS OF JULY 1ST THE BACKEND TO THIS WEBSITE IS NO LONGER FUNCTIONAL. I AM ATTEMPTING TO MOVE THE SERVERS TO SOMETHING NEW AND BETTER SUITED. THE SITE WILL NOT WORK IF YOU TRY AND DOWNLOAD ANYTHING.
-            PLEASE DONATE. THE BACKEND OF THIS SITE NEEDS TO BE UPGRADED AND I DON'T RUN ADS. PLEASE CONSIDER DONATING!</h1>
-            <br></br>
      <p style={{ fontSize: '1rem', lineHeight: '1.5' }}>
             This tool is for personal, educational, and fair-use only. You are responsible for
             complying with the terms of the platforms from which you download content. We do not host
             or distribute any copyrighted material.
-          </p>
-          <br></br>
-              <p style={{ fontSize: '1rem', lineHeight: '1.5' }}>
-            Changelog 06/27/2025: Had to remove options for downloading entire youtube pages and playlists as it was choking my backend system (suffering from success I guess).
           </p>
           <br></br>
       </form>
