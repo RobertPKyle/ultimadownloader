@@ -11,7 +11,7 @@ export default function HomePage() {
     e.preventDefault();
 
     try {
-      const response = await fetch('https://e3f0bf8afbc0.ngrok.app/download', {
+      const response = await fetch('https://f8a1867ebc57.ngrok.app/download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, format }),
