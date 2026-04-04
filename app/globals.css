@@ -1,0 +1,137 @@
+/* globals.css */
+
+@font-face {
+  font-family: 'Avatar';
+  src: url('/fonts/Avatar.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* ── Ultima colour palette ─────────────────────────────────────────────────
+   Inspired by the classic RPG series: dungeon-dark backgrounds, torch-gold
+   accents, aged-parchment text, and deep crimson / forest-green signals.
+   ───────────────────────────────────────────────────────────────────────── */
+:root {
+  --bg:            #0A0C14;   /* near-black dungeon sky          */
+  --surface:       #111827;   /* dark stone wall                 */
+  --surface-raise: #1A2438;   /* slightly lifted stone           */
+  --border:        #2A3550;   /* aged stone mortar               */
+  --gold:          #C8922A;   /* torch-gold                      */
+  --gold-bright:   #E8AE40;   /* bright gold hover               */
+  --gold-dim:      #7A5418;   /* dim gold for disabled states    */
+  --text:          #E8DFCC;   /* warm parchment                  */
+  --text-muted:    #8B7D6B;   /* aged parchment                  */
+  --crimson:       #7A1A1A;   /* blood red — errors              */
+  --crimson-light: #FFD5D5;   /* pale red text on error bg       */
+  --emerald:       #1A4D2E;   /* forest green — success          */
+  --emerald-light: #C8FFDC;   /* pale green text on success bg   */
+  --sapphire:      #1A2D4D;   /* deep blue — status / info       */
+  --sapphire-light:#C8D8FF;   /* pale blue text on status bg     */
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Avatar', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+main {
+  max-width: 680px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background-color: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(200, 146, 42, 0.08);
+}
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: var(--gold);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+input[type="text"],
+select {
+  padding: 0.6rem;
+  font-size: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--surface-raise);
+  color: var(--text);
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+input[type="text"]:focus,
+select:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+select option {
+  background-color: var(--surface);
+  color: var(--text);
+}
+
+button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--gold);
+  background-color: var(--gold);
+  color: #0A0C14;
+  font-family: inherit;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+button:hover:enabled {
+  background-color: var(--gold-bright);
+  border-color: var(--gold-bright);
+}
+
+button:disabled {
+  background-color: var(--surface-raise);
+  border-color: var(--border);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+label {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: var(--text);
+}
+
+img {
+  display: block;
+  margin: 1rem auto;
+}
+
+nav ul {
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+a {
+  color: var(--gold);
+}
+
+a:hover {
+  color: var(--gold-bright);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
