@@ -11,7 +11,7 @@
     "@ffmpeg/util": "^0.12.2",
     "@vercel/analytics": "^1.5.0",
     "archiver": "^5.3.1",
-    "next": "15.3.4",
+    "next": "15.3.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "uuid": "^9.0.0"
