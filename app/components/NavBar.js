@@ -2,26 +2,18 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
 const tabs = [
-  { label: 'YouTube', path: '/' },
-  { label: 'Twitter / X', path: '/twitter' },
-  { label: 'Instagram', path: '/instagram' },
-  { label: 'TikTok', path: '/tiktok' },
-  { label: 'Reddit', path: '/reddit' },
-  { label: 'Facebook', path: '/facebook' },
-  { label: 'Twitch', path: '/twitch' },
-  { label: 'Rumble', path: '/rumble' },
-  { label: 'Odysee', path: '/odysee' },
-  { label: 'Kick', path: '/kick' },
-  { label: 'Vimeo', path: '/vimeo' },
-  { label: 'Dailymotion', path: '/dailymotion' },
-  { label: 'Nebula', path: '/nebula' },
-  { label: 'DLive', path: '/dlive' },
-  { label: 'Tumblr', path: '/tumblr' },
-  { label: 'Internet Archive', path: '/archive' },
-  { label: 'Flickr', path: '/flickr' },
+  { label: 'YouTube',          path: '/'            },
+  { label: 'TikTok',           path: '/tiktok'      },
+  { label: 'Instagram',        path: '/instagram'   },
+  { label: 'Facebook',         path: '/facebook'    },
+  { label: 'Twitter / X',      path: '/twitter'     },
+  { label: 'Reddit',           path: '/reddit'      },
+  { label: 'Rumble',           path: '/rumble'      },
+  { label: 'Odysee',           path: '/odysee'      },
+  { label: 'Dailymotion',      path: '/dailymotion' },
 ];
+
 
 export default function NavBar() {
   const pathname = usePathname();
