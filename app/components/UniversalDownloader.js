@@ -74,11 +74,25 @@ export default function UniversalDownloader() {
   const [progress, setProgress] = useState(null); // { loaded, total } or null
   const [result, setResult]   = useState(null);   // { title, ext, filesize }
 
+  const urlRef = useRef(url);
+  const formatRef = useRef(format);
+
+  useEffect(() => {
+    urlRef.current = url;
+  }, [url]);
+
+  useEffect(() => {
+    formatRef.current = format;
+  }, [format]);
+
   useEffect(() => {
     const worker = new Worker('/yt-dlp-worker.js');
     workerRef.current = worker;
 
     worker.onmessage = async ({ data }) => {
+      const currentUrl = urlRef.current;
+      const currentFormat = formatRef.current;
+
       switch (data.type) {
         case 'status':
           setMsg(data.message);
@@ -97,6 +111,27 @@ export default function UniversalDownloader() {
           break;
 
         case 'error':
+          const isFallback = data.message.includes('COMPLEX_SITE_FALLBACK') || data.message.includes('HLS_PLAYLIST_FALLBACK');
+          const isKnownComplex = currentUrl.includes('dailymotion.com') || currentUrl.includes('rumble.com') || currentUrl.includes('reddit.com') || currentUrl.includes('tiktok.com') || currentUrl.includes('instagram.com') || currentUrl.includes('facebook.com') || currentUrl.includes('fb.com') || currentUrl.includes('twitter.com') || currentUrl.includes('x.com');
+
+          // Fallback for extraction failure on complex sites
+          if (isFallback || isKnownComplex) {
+            setPhase(STATUS.DOWNLOADING);
+            setMsg('Browser extraction blocked or complex site. Trying server-side...');
+            try {
+              // Use a sanitized placeholder if title isn't known yet
+              await serverSideDownload(currentUrl.trim(), currentFormat, 'download');
+              setResult({ title: 'download', ext: currentFormat });
+              setPhase(STATUS.READY);
+              setMsg('');
+              return;
+            } catch (serverErr) {
+              console.error('Server extraction fallback failed:', serverErr);
+              setPhase(STATUS.ERROR);
+              setMsg(`Server fallback failed: ${serverErr.message}`);
+              return;
+            }
+          }
           setPhase(STATUS.ERROR);
           setMsg(data.message);
           break;
@@ -111,11 +146,33 @@ export default function UniversalDownloader() {
     return () => worker.terminate();
   }, []);
 
-  // Fetch a URL via the CORS proxy and return a Uint8Array.
-  async function fetchBinary(url, label) {
-    const proxied  = PROXY + '?url=' + encodeURIComponent(url);
-    const response = await fetch(proxied);
-    if (!response.ok) throw new Error(`HTTP ${response.status} fetching ${label}`);
+  // Fetch a URL and return a Uint8Array.
+  // headers: per-format headers from yt-dlp (Referer, Authorization, etc.).
+  // Try direct first — most CDN URLs are CORS-accessible without the proxy.
+  // YouTube googlevideo URLs are IP-signed to the proxy's Cloudflare IP so
+  // they 403 directly; the catch retries via proxy with the same headers.
+  // Browsers silently drop forbidden headers (Referer, User-Agent, Cookie…).
+  // Convert them to X-Override-* so the Cloudflare proxy can re-inject them.
+  function proxyHeaders(headers = {}) {
+    const out = {};
+    const OVERRIDE = { referer: 'X-Override-Referer', 'user-agent': 'X-Override-User-Agent', cookie: 'X-Override-Cookie', origin: 'X-Override-Origin' };
+    for (const [k, v] of Object.entries(headers)) {
+      const mapped = OVERRIDE[k.toLowerCase()];
+      out[mapped ?? k] = v;
+    }
+    return out;
+  }
+
+  async function fetchBinary(url, label, headers = {}) {
+    let response;
+    try {
+      response = await fetch(url, { headers });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    } catch {
+      const proxiedUrl = PROXY + '?url=' + encodeURIComponent(url);
+      response = await fetch(proxiedUrl, { headers: proxyHeaders(headers) });
+      if (!response.ok) throw new Error(`HTTP ${response.status} fetching ${label} (via proxy)`);
+    }
 
     const total  = parseInt(response.headers.get('content-length') || '0', 10);
     const reader = response.body.getReader();
@@ -155,6 +212,7 @@ export default function UniversalDownloader() {
   // ffmpeg args per audio output format
   const AUDIO_CODECS = {
     mp3:  ['-vn', '-c:a', 'libmp3lame', '-q:a', '2'],
+    m4a:  ['-vn', '-c:a', 'aac', '-b:a', '192k'],
     aac:  ['-vn', '-c:a', 'aac', '-b:a', '192k'],
     wav:  ['-vn', '-c:a', 'pcm_s16le'],
     flac: ['-vn', '-c:a', 'flac'],
@@ -162,7 +220,7 @@ export default function UniversalDownloader() {
   };
 
   // Containers that accept H264+AAC with -c copy (no re-encode needed)
-  const COPY_SAFE = new Set(['mp4', 'mkv', 'mov', 'avi', 'flv', '3gp', 'm4v']);
+  const COPY_SAFE = new Set(['mp4', 'mkv', 'm4v', 'flv', '3gp']);
 
   function toError(err) {
     if (err instanceof Error) return err;
@@ -171,25 +229,50 @@ export default function UniversalDownloader() {
   }
 
   async function ffExec(ff, args) {
+    console.log('[ffmpeg] exec:', args.join(' '));
     const code = await ff.exec(args);
     if (code !== 0) throw new Error(`ffmpeg error (exit ${code}) — ${args.join(' ')}`);
   }
 
-  async function streamDownload({ streamUrl, audioUrl, needsMerge, title, ext, audioExt = 'm4a', requestedFormat }) {
+  async function serverSideDownload(targetUrl, targetFormat, targetTitle) {
+    console.log('[serverSideDownload] URL:', targetUrl, '| Format:', targetFormat);
+    setMsg('Browser download blocked. Trying server-side download...');
+    const response = await fetch('/api/download', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: targetUrl, format: targetFormat }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Server error ${response.status}`);
+    }
+
+    // Read the stream to show progress if possible, or just get the blob
+    const blob = await response.blob();
+    console.log('[serverSideDownload] Blob size:', blob.size, '| MIME:', blob.type);
+    triggerDownload(blob, `${sanitizeFilename(targetTitle)}.${targetFormat}`);
+  }
+
+  async function streamDownload({ streamUrl, streamHeaders = {}, audioUrl, audioHeaders = {}, needsMerge, title, ext, audioExt = 'm4a', requestedFormat }) {
     try {
+      const currentFormat = formatRef.current;
       const filename = sanitizeFilename(title);
-      const outFmt   = requestedFormat || ext;
+      // ALWAYS prioritize requestedFormat (from the extraction request) or the current UI state.
+      // 'ext' from the worker is the source format, not the target format.
+      const outFmt   = requestedFormat || currentFormat || 'mp4';
       const isAudio  = outFmt in AUDIO_CODECS;
 
-      console.log('[streamDownload] requestedFormat:', requestedFormat, '| ext:', ext, '| audioExt:', audioExt, '| outFmt:', outFmt, '| needsMerge:', needsMerge);
+      console.log('[streamDownload] START | UI format:', currentFormat, '| Worker requestedFormat:', requestedFormat, '| Source ext:', ext, '| TARGET outFmt:', outFmt);
 
       if (isAudio) {
         // ── Audio transcode: mp3 / aac / wav / flac / opus ────────────────────
         // Use audioUrl if available (cleaner audio stream), else streamUrl
-        const srcUrl = (audioUrl && needsMerge) ? audioUrl : streamUrl;
-        const srcExt = (audioUrl && needsMerge) ? audioExt : ext;
+        const srcUrl     = (audioUrl && needsMerge) ? audioUrl     : streamUrl;
+        const srcExt     = (audioUrl && needsMerge) ? audioExt     : ext;
+        const srcHeaders = (audioUrl && needsMerge) ? audioHeaders : streamHeaders;
         setMsg('Downloading audio stream...');
-        const audioData = await fetchBinary(srcUrl, 'audio');
+        const audioData = await fetchBinary(srcUrl, 'audio', srcHeaders);
 
         const ff = await loadFFmpegOnce(setMsg);
         ff.off('progress');
@@ -201,17 +284,17 @@ export default function UniversalDownloader() {
 
         const out = await ff.readFile(`output.${outFmt}`);
         triggerDownload(
-          new Blob([out.buffer], { type: MIME[outFmt] || 'audio/mpeg' }),
+          new Blob([out], { type: MIME[outFmt] || 'audio/mpeg' }),
           `${filename}.${outFmt}`,
         );
 
       } else if (needsMerge && audioUrl) {
         // ── HD video: merge separate video + audio streams ────────────────────
         setMsg('Downloading video stream...');
-        const videoData = await fetchBinary(streamUrl, 'video');
+        const videoData = await fetchBinary(streamUrl, 'video', streamHeaders);
         setMsg('Downloading audio stream...');
         setProgress(null);
-        const audioData = await fetchBinary(audioUrl, 'audio');
+        const audioData = await fetchBinary(audioUrl, 'audio', audioHeaders);
 
         const ff = await loadFFmpegOnce(setMsg);
         ff.off('progress');
@@ -241,18 +324,18 @@ export default function UniversalDownloader() {
         }
 
         triggerDownload(
-          new Blob([finalData.buffer], { type: MIME[outFmt] || 'video/mp4' }),
+          new Blob([finalData], { type: MIME[outFmt] || 'video/mp4' }),
           `${filename}.${outFmt}`,
         );
 
       } else {
         // ── Direct download (single pre-merged stream) ────────────────────────
-        setMsg('Downloading...');
-        const data = await fetchBinary(streamUrl, 'media');
+        setMsg(`Downloading ${outFmt.toUpperCase()}...`);
+        const data = await fetchBinary(streamUrl, 'media', streamHeaders);
 
-        // If the stream's container already matches what was requested, save directly.
-        // Otherwise remux through ffmpeg (e.g. download came as webm, user wants mkv).
-        if (ext === outFmt || outFmt === 'm4a') {
+        // Even if source ext matches outFmt, go through ffmpeg if it's not mp4/webm/mkv
+        // to be 100% sure we have a valid container for things like avi/mov.
+        if (ext === outFmt && COPY_SAFE.has(outFmt)) {
           triggerDownload(
             new Blob([data], { type: MIME[outFmt] || 'application/octet-stream' }),
             `${filename}.${outFmt}`,
@@ -262,10 +345,21 @@ export default function UniversalDownloader() {
           const ff = await loadFFmpegOnce(setMsg);
           ff.off('progress');
           await ff.writeFile(`input.${ext}`, data);
-          await ffExec(ff, ['-i', `input.${ext}`, '-c', 'copy', `output.${outFmt}`]);
+          
+          let args = ['-i', `input.${ext}`];
+          if (outFmt === 'm4a') {
+            args.push('-vn', '-c:a', 'copy', `output.${outFmt}`);
+          } else if (COPY_SAFE.has(outFmt)) {
+            args.push('-c', 'copy', `output.${outFmt}`);
+          } else {
+            // Re-encode if container is not copy-safe (like AVI)
+            args.push(`output.${outFmt}`);
+          }
+          
+          await ffExec(ff, args);
           const out = await ff.readFile(`output.${outFmt}`);
           triggerDownload(
-            new Blob([out.buffer], { type: MIME[outFmt] || 'application/octet-stream' }),
+            new Blob([out], { type: MIME[outFmt] || 'application/octet-stream' }),
             `${filename}.${outFmt}`,
           );
         }
@@ -276,6 +370,24 @@ export default function UniversalDownloader() {
       setMsg('');
       setProgress(null);
     } catch (rawErr) {
+      console.error('[streamDownload] Error:', rawErr);
+      const currentUrl = urlRef.current;
+      const currentFormat = formatRef.current;
+      // Fallback for TikTok/complex sites if browser fetch fails
+      if (currentUrl.includes('tiktok.com') || currentUrl.includes('instagram.com') || currentUrl.includes('facebook.com') || currentUrl.includes('fb.com') || currentUrl.includes('twitter.com') || currentUrl.includes('x.com')) {
+        try {
+          const fallbackFmt = requestedFormat || currentFormat || 'mp4';
+          console.log('[streamDownload] Triggering server fallback with format:', fallbackFmt);
+          await serverSideDownload(currentUrl.trim(), fallbackFmt, title);
+          setResult({ title, ext: fallbackFmt });
+          setPhase(STATUS.READY);
+          setMsg('');
+          setProgress(null);
+          return;
+        } catch (serverErr) {
+          console.error('[streamDownload] Server fallback failed:', serverErr);
+        }
+      }
       const err = toError(rawErr);
       setPhase(STATUS.ERROR);
       setMsg('Download failed: ' + err.message);
